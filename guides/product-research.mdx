@@ -128,21 +128,23 @@ Common use cases for ASIN/GTIN conversion:
 
 ## Sales estimates
 
-Before entering a category or launching a competing product, you need to know whether real demand exists. `GET /api/amazon/product/sales` returns estimated unit sales at three time horizons:
+Before entering a category or launching a competing product, you need a consistent demand signal. `GET /api/amazon/product/sales` returns a current-rank unit-sales run-rate projection at three time horizons:
 
 | Field | Description |
 |---|---|
-| `weeklyUnitSales` | Estimated units sold in the past 7 days |
-| `monthlyUnitSales` | Estimated units sold in the past 30 days |
-| `annualUnitSales` | Estimated units sold in the past 12 months |
+| `weeklyUnitSales` | Projected weekly run rate derived from the current rank observation |
+| `monthlyUnitSales` | Projected monthly run rate derived from the current rank observation |
+| `annualUnitSales` | Projected annual run rate derived from the current rank observation |
 
 ```bash
 curl "https://gladeapi.com/api/amazon/product/sales?asin=B0D1XD1ZV3&domain=US" \
   -H "API-KEY: YOUR_GLADE_API_KEY"
 ```
 
-Use `monthlyUnitSales` as your primary demand signal — it smooths out short-term spikes while still reflecting current conditions. Use `weeklyUnitSales` to detect seasonal surges or product launches in progress.
+These values are scaled from the same point-in-time rank input. They are not independent historical windows, so the weekly field cannot establish a seasonal surge and the monthly field does not smooth 30 days of observations. Check `status`, `scope`, `dataFetchedAt`, `methodology`, and `periodSemantics` before using the projection. Group sibling ASINs only when `familyDeduplicationKey` is present.
+
+The operation does not currently return historical revenue, independent calibration results, or confidence intervals. See the [sales-estimates reference](/api-reference/sales-estimates) for the full response and limitations.
 
 <Tip>
-  Combine sales estimates with best-seller rank data to prioritize which categories have high volume but weak competition. A category with strong sales across many products but no single dominant #1 is often easier to enter than one where a single listing holds a dominant rank.
+  Use the projection as one labeled input to product research. Preserve its model version and retrieval time, avoid double-counting known sibling variations, and do not present it as actual seller revenue.
 </Tip>

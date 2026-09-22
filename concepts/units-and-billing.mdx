@@ -26,13 +26,13 @@ Every successful operation deducts exactly one unit from your balance, no matter
 
 ## Plans
 
-Glade API offers four plans. Hobby and Pay as you go include 100 units; higher tiers include the quantities shown below.
+Glade API offers four plans. Hobby includes 100 units, Starter includes 2,000 units, and higher tiers include the quantities shown below.
 
 | Plan | Price | Units included | Requests/min | Concurrent | Interfaces | Overage |
 |---|---|---|---|---|---|---|
 | **Hobby** | $0 | 100 | 30 | 2 | REST only | Hard cap (no overage) |
-| **Pay as you go** | $0/month | 100 | 120 | 10 | REST + GraphQL + MCP | $0.01/unit |
-| **Premium 20K** | $99/month | 20,000 | 600 | 50 | REST + GraphQL + MCP | $0.008/unit |
+| **Starter** | $15/month | 2,000 | 120 | 10 | REST + GraphQL + MCP | $0.01/unit |
+| **Pro 20K** | $99/month | 20,000 | 600 | 50 | REST + GraphQL + MCP | $0.008/unit |
 | **Enterprise** | Custom | 1,000,000 | 1,200 | 100 | REST + GraphQL + MCP | Hard cap option available |
 
 For current plan details, visit [gladeapi.com/pricing](https://gladeapi.com/pricing).
@@ -47,8 +47,8 @@ Your monthly unit consumption depends on the number of operations you run and th
 
 A few reference points to help you plan:
 
-- The **Premium 20K** plan covers approximately 666 products per day if you fetch each ASIN from a single marketplace (20,000 units ÷ 30 days).
-- If you query the same ASIN across two marketplaces, that halves your daily ASIN budget to ~333 products per day on Premium 20K.
+- The **Pro 20K** plan covers approximately 666 products per day if you fetch each ASIN from a single marketplace (20,000 units ÷ 30 days).
+- If you query the same ASIN across two marketplaces, that halves your daily ASIN budget to ~333 products per day on Pro 20K.
 - For workloads that mix product lookups, search queries, and offer checks, count each operation individually — they each consume one unit.
 
 ---
@@ -68,6 +68,6 @@ When you exhaust your unit balance on a **Hobby** plan or any plan with a hard c
 
 To resolve a quota error:
 
-- **Hobby plan:** Upgrade to Pay as you go to unlock per-unit overage billing and eliminate the hard cap.
-- **Pay as you go or Premium:** Enable overage billing explicitly in the dashboard if you want requests to continue beyond included units. You can also set a monthly spend limit.
+- **Hobby plan:** Upgrade to Starter to unlock per-unit overage billing and eliminate the hard cap.
+- **Starter or Pro:** Enable overage billing explicitly in the dashboard if you want requests to continue beyond included units. You can also set a monthly spend limit.
 - **Enterprise:** Contact your account manager to adjust your quota or enable a hard cap for cost control.

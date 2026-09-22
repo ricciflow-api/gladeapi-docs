@@ -1,7 +1,150 @@
 ---
 title: "Get Amazon Sales Estimates"
-description: "Get weekly, monthly, and annual unit-sales estimates for an Amazon product."
+description: "Get a versioned unit-sales run-rate projection with product scope, methodology, freshness, and explicit limitations."
 openapi: "GET /api/amazon/product/sales"
 ---
 
 Pass exactly one of `asin`, `gtin`, or `url`.
+
+```bash
+curl --include --get \
+  "https://gladeapi.com/api/amazon/product/sales" \
+  --data-urlencode "asin=B0D1XD1ZV3" \
+  --data-urlencode "domain=US" \
+  --header "API-KEY: YOUR_GLADE_API_KEY"
+```
+
+## What the values mean
+
+`weeklyUnitSales`, `monthlyUnitSales`, and `annualUnitSales` are projected run
+rates derived from one current best-sellers-rank observation. They are not
+seller-reported transactions and do not represent historical rolling or
+calendar windows.
+
+The operation currently uses `CURRENT_BEST_SELLERS_RANK` as its input signal.
+It does not use rank history, purchase badges, seller-account data, or an
+aligned historical price series. The response returns the immutable
+`methodology.modelVersion` used for each projection.
+
+<Warning>
+  Glade API does not currently publish independent marketplace- or
+  category-level calibration, confidence intervals, or historical revenue.
+  Preserve the returned limitations and label these values as estimates.
+</Warning>
+
+## Example response
+
+```json
+{
+  "data": {
+    "amazonProduct": {
+      "asin": "B0D1XD1ZV3",
+      "requestedAsin": "B0D1XD1ZV3",
+      "resolvedAsin": "B0D1XD1ZV3",
+      "canonicalParentAsin": "B0D1XD1ZV0",
+      "familyDeduplicationKey": "B0D1XD1ZV0",
+      "scope": "CHILD_ASIN",
+      "salesEstimate": {
+        "status": "AVAILABLE",
+        "estimateType": "PROJECTED_RUN_RATE",
+        "scope": "UNKNOWN",
+        "weeklyUnitSales": 185,
+        "monthlyUnitSales": 802,
+        "annualUnitSales": 9624,
+        "sourceSalesRank": 785,
+        "dataFetchedAt": "2026-09-22T08:28:42.000Z",
+        "estimatedAt": "2026-09-22T08:28:42.100Z",
+        "sourceObservedAt": null,
+        "sourceObservationTimeAvailable": false,
+        "timezone": "UTC",
+        "periodSemantics": {
+          "historical": false,
+          "calendarAligned": false,
+          "rollingWindowDays": null
+        },
+        "methodology": {
+          "modelVersion": "baseline-2026-08-14",
+          "inputSignals": ["CURRENT_BEST_SELLERS_RANK"],
+          "independentlyCalibrated": false,
+          "confidenceIntervalAvailable": false,
+          "limitations": [
+            "Projected run rate from one current best-sellers-rank observation, not seller-reported transactions."
+          ]
+        },
+        "revenue": {
+          "status": "NOT_AVAILABLE",
+          "reason": "ALIGNED_HISTORICAL_PRICE_WINDOW_UNAVAILABLE"
+        }
+      }
+    }
+  }
+}
+```
+
+Values and identity metadata depend on the selected marketplace and the
+available public listing data. Optional fields are omitted when they cannot be
+established.
+
+## Variation scope and deduplication
+
+Use `scope` to interpret listing identity:
+
+| Value | Meaning |
+|---|---|
+| `CHILD_ASIN` | The resolved listing identifies a child variation and a canonical parent was found. |
+| `PARENT_ASIN` | The resolved listing matches the canonical parent. |
+| `UNKNOWN` | The provider data did not establish a parent/child relationship. Do not assume family-level or child-level scope. |
+
+When `familyDeduplicationKey` is present, group siblings by that value. When it
+is absent, keep the resolved ASIN separate rather than guessing a family.
+`salesEstimate.scope` separately states whether the estimate itself is known
+to cover the exact ASIN or the parent family. It is currently `UNKNOWN` unless
+the upstream response explicitly declares that scope, so do not sum sibling
+projections when that value is unknown.
+
+## Availability and zero values
+
+When no usable sales rank is available, the request can succeed with:
+
+```json
+{
+  "status": "UNAVAILABLE",
+  "unavailableReason": "SALES_RANK_UNAVAILABLE"
+}
+```
+
+Unit fields are omitted in that state. An available projection has positive
+unit values, so an unavailable input is never represented as a true zero.
+Target, provider, validation, and quota failures remain HTTP errors and consume
+zero units.
+
+## Freshness
+
+`dataFetchedAt` is the upstream result creation time, or Glade API retrieval
+time when the upstream value is absent. It is not an Amazon source-observation
+timestamp; `sourceObservedAt` is `null` and
+`sourceObservationTimeAvailable` is `false` to state this explicitly.
+`estimatedAt` is when Glade API calculated the projection. The
+`X-Glade-Cache` header reports `hit`, `miss`, or `stale`, and
+`X-Glade-Data-Fetched-At` preserves the retrieval time across cache hits.
+
+## Revenue and commercial use
+
+This operation returns units, not historical revenue. Do not multiply the
+projection by a separately retrieved current price and present the result as
+historical seller revenue.
+
+Paid plans, including Starter, permit materially transformed analyses and
+derived reports for multiple customers. Raw API passthrough and bulk
+redistribution remain prohibited. Underlying responses may be retained for up
+to 12 months for audit, reproducibility, support, and historical evidence.
+Glade API attribution is not required unless an order form says otherwise;
+third-party obligations still apply. Review the current
+[Terms of Service](https://gladeapi.com/terms) before production use.
+
+One successful operation consumes one unit, including an authenticated cache
+hit. Failed operations consume zero units.
+
+The Hobby plan includes 100 units per monthly quota period and requires no
+payment method or recurring commitment. Hobby supports this REST endpoint;
+GraphQL and MCP require a paid plan that includes those interfaces.

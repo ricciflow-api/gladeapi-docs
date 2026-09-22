@@ -13,8 +13,8 @@ Glade API enforces per-plan rate limits to ensure fair access for all users. If 
 | Plan | Requests/min | Concurrent |
 |---|---|---|
 | **Hobby** | 30 | 2 |
-| **Pay as you go** | 120 | 10 |
-| **Premium 20K** | 600 | 50 |
+| **Starter** | 120 | 10 |
+| **Pro 20K** | 600 | 50 |
 | **Enterprise** | 1,200 | 100 |
 
 The listed limits are enforced per API key. An organization-wide guard also applies at twice the per-key request and concurrency limits. Concurrent caps count requests that have been sent but have not completed.
@@ -82,8 +82,8 @@ Set the `pLimit` value to your plan's concurrent request cap:
 | Plan | Recommended `pLimit` value |
 |---|---|
 | Hobby | `2` |
-| Pay as you go | `10` |
-| Premium 20K | `50` |
+| Starter | `10` |
+| Pro 20K | `50` |
 | Enterprise | `100` |
 
 Keeping your concurrency at or below the cap means every request is accepted on the first attempt, your throughput is maximised, and you avoid the latency cost of retrying `429` errors.
